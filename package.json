@@ -1,0 +1,1 @@
+{"name":"trinkjournal","private":true,"type":"module","scripts":{"check":"node --check dist/app.js && node --check dist/sw.js && node tests.mjs"},"devDependencies":{"@playwright/test":"^1.65.1"}}

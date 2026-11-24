@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {statistics,periodRange,dayCount,automaticAggregation} from './dist/statistics-core.js';
+const e=(day,name,ml,nutrition)=>({day,name,ml,...(nutrition?{nutrition}:{})});
+const data=[e('2026-11-01','Wasser',300,{sugar:0}),e('2026-11-02','Wasser',200,{sugar:0}),e('2026-11-02','Saft',300,{sugar:10,kcal:40}),e('2026-10-31','Wasser',1000)];
+const range={start:'2026-11-01',end:'2026-11-04'};
+let s=statistics(data,range);assert.equal(s.entries,3);assert.equal(s.days,4);assert.equal(s.volume,.8);assert.equal(s.total.average,.2);assert.equal(s.buckets.length,4);assert.equal(s.buckets[2].value,0);assert.equal(s.drinks.find(d=>d.name==='Wasser').value,.5);
+s=statistics(data,{...range,metric:'drink:Wasser'});assert.equal(s.total.value,.5);assert.equal(s.total.average,.125);
+s=statistics(data,{...range,metric:'nutrient:sugar'});assert.equal(s.total.value,30);assert.equal(s.total.average,7.5);assert.equal(s.total.known,3);assert.equal(s.total.partial,false);
+s=statistics(data,{...range,metric:'nutrient:kcal'});assert.equal(s.total.value,120);assert.equal(s.total.average,30);assert.equal(s.total.partial,true);assert.equal(s.buckets[0].value,null);assert.equal(s.buckets[1].partial,true);assert.equal(s.buckets[2].value,0);
+s=statistics(data,{...range,aggregation:'week'});assert.equal(s.buckets.length,2);assert.equal(s.buckets[0].days,1);assert.equal(s.buckets[1].days,3);assert.equal(s.buckets[1].value,.5);assert.equal(s.buckets[1].average,.5/3);
+s=statistics(data,{start:'2026-10-31',end:'2026-11-04',aggregation:'month'});assert.equal(s.buckets[0].days,1);assert.equal(s.buckets[1].days,4);assert.equal(s.buckets[0].value,1);assert.equal(s.buckets[1].value,.8);assert.equal(s.buckets.reduce((sum,b)=>sum+b.value,0),s.total.value);
+assert.equal(dayCount('2024-02-01','2024-02-29'),29);assert.equal(dayCount('2026-03-28','2026-03-30'),3);assert.equal(dayCount('2026-10-24','2026-10-26'),3);
+assert.deepEqual(periodRange('week','2026-01-01','2026-11-24'),{start:'2025-12-29',end:'2026-01-04'});assert.deepEqual(periodRange('month','2024-02-10','2026-11-24'),{start:'2024-02-01',end:'2024-02-29'});assert.deepEqual(periodRange('year','2026-11-24','2026-11-24'),{start:'2026-01-01',end:'2026-11-24'});
+assert.equal(automaticAggregation(7),'day');assert.equal(automaticAggregation(90),'week');assert.equal(automaticAggregation(365),'month');assert.equal(statistics([],range).total.value,0);assert.equal(statistics([],{...range,metric:'nutrient:sugar'}).total.unknown,true);
+assert.throws(()=>statistics(data,{start:'2026-02-30',end:'2026-03-01'}));assert.throws(()=>statistics(data,{start:range.end,end:range.start}));assert.throws(()=>statistics(data,{start:'2020-01-01',end:'2026-11-24',aggregation:'day'}));
+console.log('OK: Zeiträume, Schaltjahr, Zeitumstellung, leere Tage, Teilwochen/-monate, Summen, Durchschnitte und unbekannte Inhaltsstoffe.');

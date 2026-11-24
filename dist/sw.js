@@ -1,0 +1,5 @@
+const CACHE='trinkjournal-v5';
+const ASSETS=['./','./index.html','./style.css?v=2','./refinement.css?v=2','./features.css?v=4','./statistics.css?v=5','./app.js?v=5','./core.js?v=4','./catalog.js?v=4','./drink-settings.js?v=4','./reminder.js?v=4','./statistics-core.js?v=5','./statistics.js?v=5','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('trinkjournal-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==self.location.origin)return;if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).then(r=>r.ok&&!r.redirected?r:caches.match('./index.html').then(c=>c||r)).catch(()=>caches.match('./index.html')));return}if(ASSETS.some(p=>new URL(p,self.registration.scope).href===e.request.url))e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request)))});

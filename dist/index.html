@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b655c"><meta name="description" content="Getränke erfassen, Tagesziel verfolgen und Einträge lokal speichern."><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="./icon-192.png"><link rel="stylesheet" href="./style.css?v=2"><title>Trinkjournal</title></head>
+<body>
+<link rel="stylesheet" href="./refinement.css?v=2">
+<link rel="stylesheet" href="./features.css?v=4">
+<link rel="stylesheet" href="./statistics.css?v=5">
+<header><a class="brand" href="./"><span class="brand-icon">◒</span> Trinkjournal</a><div class="header-actions"><span class="local-badge">Lokal gespeichert</span><button id="install" hidden>App installieren</button><details id="app-menu" class="app-menu"><summary aria-label="Menü öffnen"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary><nav aria-label="App-Menü"><button id="stats-open">Statistiken</button><hr><button id="import-open">CSV importieren</button><button id="export-day">CSV exportieren · angezeigter Tag</button><button id="export-all">CSV exportieren · alle Tage</button><hr><button id="settings">Einstellungen</button></nav></details></div></header>
+<main>
+<section class="intro"><h1>Trinkübersicht</h1><div class="date-box"><label for="day">Datum</label><div class="date-controls"><button id="prev" aria-label="Vorheriger Tag">‹</button><input type="date" id="day" required><button id="next" aria-label="Nächster Tag">›</button></div><button id="today" class="text-button">Heute</button></div></section>
+<div id="storage-warning" class="warning" role="alert" hidden></div>
+<section id="timer-card" class="timer-card" aria-label="Trinkerinnerung" hidden><div><strong>Trinkerinnerung</strong><p id="timer-next"></p></div><div class="timer-actions"><output id="timer-countdown" aria-label="Zeit bis zur nächsten Erinnerung" aria-live="off">00:00:00</output><button id="enable-sound" type="button" hidden>Ton aktivieren</button></div></section>
+<div id="reminder-banner" class="reminder-banner" role="alert" hidden><strong>Zeit, etwas zu trinken.</strong><button id="reminder-dismiss" type="button">Schließen</button></div>
+<section class="daily-total" aria-label="Tagesbilanz"><div><span id="day-label">Heute getrunken</span><p><strong id="total">0</strong> <span class="unit">Liter</span></p></div><div class="total-meta"><strong id="count">0 Getränke</strong><span id="types">0 Getränkearten</span></div><div class="goal-progress"><div class="goal-label"><span id="goal-label">Tagesziel: 1,5 l</span><strong id="goal-percent">0 %</strong></div><div id="goal-progress" class="goal-track" role="progressbar" aria-label="Tagesziel erreicht" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="goal-fill"></div></div></div></section>
+<div class="workspace"><section class="drink-section"><div class="section-heading"><h2>Getränk erfassen</h2><button id="add-drink" class="text-button">＋ Eigenes Getränk</button></div><div id="drinks" class="drink-grid"></div></section>
+<aside><section class="summary panel"><div class="section-heading"><h2>Tagesbilanz</h2><span class="small-label">LITER</span></div><div id="summary"></div><div id="nutrition-section" hidden><h3 class="settings-title">Inhaltsstoffe</h3><div id="nutrition-summary"></div><p class="section-hint">Erfasste Werte, gegebenenfalls Richtwerte. Fehlende Angaben sind nicht eingerechnet.</p></div></section></aside></div>
+<section class="timeline panel"><div class="section-heading"><h2>Tagesverlauf</h2><span id="timeline-date" class="small-label"></span></div><div id="entries"></div></section>
+<footer>Speicherung nur in diesem Browser. Datensicherung über CSV im Menü.</footer>
+</main>
+<dialog id="entry-dialog"><form id="entry-form"><div class="dialog-heading"><span class="eyebrow">GETRÄNK ERFASSEN</span><button type="button" class="close" data-close aria-label="Schließen">×</button></div><h2 id="entry-title"></h2><p id="entry-date" class="section-hint"></p><label for="amount">Menge</label><select id="amount"></select><label for="time">Uhrzeit</label><input id="time" type="time" required><div class="dialog-actions"><button type="button" data-close>Abbrechen</button><button type="submit" class="primary">Eintrag speichern</button></div></form></dialog>
+<dialog id="settings-dialog">
+ <div class="dialog-heading"><h2>Einstellungen</h2><button class="close" data-close aria-label="Schließen">×</button></div>
+ <form id="goal-form"><label for="daily-goal">Tagesziel in Litern</label><input id="daily-goal" type="number" min="0.1" max="20" step="0.05" required inputmode="decimal" aria-describedby="goal-help"><p id="goal-help" class="section-hint">Voreinstellung: 1,5 l nach <a href="https://www.dge.de/gesunde-ernaehrung/gut-essen-und-trinken/dge-empfehlungen/am-besten-wasser-trinken" target="_blank" rel="noopener noreferrer">DGE-Empfehlung</a>, vorzugsweise Wasser oder ungesüßter Tee. Der Balken zählt die Gesamtmenge aller erfassten Getränke.</p></form>
+ <h3 class="settings-title">Trinkerinnerung</h3>
+ <form id="reminder-form">
+  <label class="check-label"><input id="reminder-enabled" type="checkbox">Erinnerung einschalten</label>
+  <div class="reminder-fields"><label>Alle x Minuten<input id="reminder-interval" type="number" min="1" max="1440" step="1" value="60" required></label><label>Erste Erinnerung<input id="reminder-start" type="time" value="08:00" required></label><label>Ende<input id="reminder-end" type="time" value="22:00" required></label></div>
+  <label class="check-label"><input id="reminder-sound-enabled" type="checkbox">Ton abspielen</label>
+  <label for="reminder-sound">Erinnerungston</label><select id="reminder-sound"><option value="chime">Sanfter Dreiklang</option><option value="double">Doppelton</option><option value="drop">Wassertropfen</option><option value="custom">Eigener Ton</option></select>
+  <button id="test-sound" type="button" class="sound-test">Ton testen und aktivieren</button>
+  <label for="sound-file">Eigenen Ton importieren (MP3 oder WAV)</label><input id="sound-file" type="file" accept=".mp3,.wav,audio/mpeg,audio/wav,audio/x-wav"><p id="sound-status" class="section-hint" role="status"></p>
+  <p class="section-hint">Erinnerungen funktionieren bei geöffneter App. Im Hintergrund, bei gesperrtem Gerät oder geschlossener App sind sie nicht zuverlässig. Ein Ton muss gegebenenfalls nach erneutem Öffnen aktiviert werden. Das Intervall beginnt täglich zur ersten Erinnerung; eine Endezeit vor der Anfangszeit gilt für den Folgetag.</p>
+
+ </form>
+ <h3 class="settings-title">Standardmengen</h3><button id="sort-drinks" type="button">Alphabetisch sortieren · A–Z, Menge aufsteigend</button>
+ <p class="section-hint">★ = auf der Hauptseite sichtbar. Am Griff rechts ziehen; mit der Tastatur den Griff fokussieren und die Pfeiltasten verwenden. Mehrere Einträge mit gleichem Namen sind möglich.</p>
+
+ <div id="drink-settings"></div>
+ <form id="drink-form"><h3>Neues Getränk oder weitere Portionsgröße</h3><label for="drink-name">Name</label><input id="drink-name" maxlength="60" placeholder="z. B. Wasser" required><label for="drink-default">Standardmenge</label><select id="drink-default"></select><button class="primary full" type="submit">Getränk hinzufügen</button></form>
+</dialog>
+<dialog id="import-dialog"><div class="dialog-heading"><h2>CSV importieren</h2><button class="close" data-close aria-label="Schließen">×</button></div><p class="section-hint">Wähle einen CSV-Export aus dem Trinkjournal. Vorhandene Einträge bleiben erhalten. Bereits enthaltene Einträge werden übersprungen.</p><label for="import-file">CSV-Datei</label><input id="import-file" type="file" accept=".csv,text/csv"><p id="import-status" role="status" class="section-hint"></p><div class="dialog-actions"><button type="button" data-close>Abbrechen</button><button id="import-confirm" type="button" class="primary" disabled>Einträge importieren</button></div></dialog>
+<div id="toast" role="status" hidden><span id="toast-text"></span><button id="undo" hidden>Rückgängig</button></div>
+<dialog id="stats-dialog">
+ <div class="dialog-heading"><h2>Statistiken</h2><button type="button" class="close" data-close aria-label="Statistiken schließen">×</button></div>
+ <div class="stats-controls">
+  <label for="stats-period">Zeitraum<select id="stats-period"><option value="week">Woche</option><option value="month">Monat</option><option value="year">Jahr</option><option value="custom">Individueller Zeitraum</option></select></label>
+  <label id="stats-anchor-wrap" for="stats-anchor">Datum im Zeitraum<input type="date" id="stats-anchor" required></label>
+  <div id="stats-custom" class="stats-custom" hidden><label for="stats-start">Von<input type="date" id="stats-start" required></label><label for="stats-end">Bis einschließlich<input type="date" id="stats-end" required></label></div>
+ </div>
+ <div id="stats-navigation" class="stats-navigation"><button type="button" id="stats-prev">Vorheriger Zeitraum</button><button type="button" id="stats-next">Nächster Zeitraum</button></div>
+ <p id="stats-error" class="warning stats-error" role="alert" hidden></p>
+ <div id="stats-results">
+  <p id="stats-range-label" class="stats-range"></p>
+  <div class="stats-controls">
+   <label for="stats-view">Auswertung<select id="stats-view"><option value="total">Gesamtmenge</option><option value="drinks">Pro Getränkeart</option><option value="nutrients">Pro Inhaltsstoff</option></select></label>
+   <label id="stats-detail-wrap" for="stats-detail" hidden>Auswahl<select id="stats-detail"></select></label>
+   <label for="stats-aggregation">Zeiteinheit<select id="stats-aggregation"><option value="auto">Automatisch</option><option value="day">Tage</option><option value="week">Wochen</option><option value="month">Monate</option></select></label>
+   <label for="stats-mode">Diagrammwerte<select id="stats-mode"><option value="sum">Menge pro Abschnitt</option><option value="average">Durchschnitt pro Tag</option></select></label>
+  </div>
+  <div class="stats-cards"><div class="stats-card"><span id="stats-total-name">Gesamtmenge · erfasst</span><strong id="stats-total"></strong></div><div class="stats-card"><span>Durchschnitt pro Tag</span><strong id="stats-average"></strong></div><div class="stats-card"><span>Zeitraum</span><strong id="stats-days"></strong></div><div class="stats-card"><span>Erfasste Einträge</span><strong id="stats-entries"></strong></div></div>
+  <p id="stats-denominator" class="stats-note"></p><p id="stats-coverage" class="stats-note"></p>
+  <p id="stats-no-metric" class="stats-no-metric" hidden>Für diesen Zeitraum sind keine passenden Mengenangaben hinterlegt.</p>
+  <section id="stats-chart-panel" class="stats-chart-panel"><div class="stats-chart-heading"><h3 id="stats-chart-title"></h3><span id="stats-chart-unit"></span></div><div id="stats-chart" class="stats-chart" tabindex="0" aria-label="Diagramm, bei Bedarf horizontal scrollen"></div><p id="stats-point" class="stats-point" aria-live="polite"></p><details class="stats-data"><summary>Diagrammdaten als Tabelle</summary><div id="stats-buckets-table" class="stats-table-wrap"></div></details></section>
+  <div class="stats-tables"><section><h3>Getränkearten</h3><div id="stats-drinks-table" class="stats-table-wrap"></div></section><section><h3>Inhaltsstoffe</h3><div id="stats-nutrients-table" class="stats-table-wrap"></div></section></div>
+ </div>
+</dialog>
+<script type="module" src="./app.js?v=5"></script>
+</body></html>
