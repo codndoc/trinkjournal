@@ -1,5 +1,13 @@
 # Trinkjournal
 
+## GitHub Pages
+
+Die App ist für `https://codndoc.github.io/trinkjournal/` vorbereitet. Der Workflow `.github/workflows/pages.yml` veröffentlicht ausschließlich den Inhalt von `dist`. Dazu muss GitHub Pages in den Repository-Einstellungen unter „Pages → Source → GitHub Actions“ aktiviert sein. Bei GitHub Free muss das Repository öffentlich sein. Nach einem erfolgreichen Lauf des Workflows „Publish Trinkjournal to GitHub Pages“ ist die Adresse nutzbar. Änderungen an `dist` auf `main` lösen die nächste Veröffentlichung aus.
+
+Die App verwendet relative Pfade; Manifest und Offline-Geltungsbereich bleiben innerhalb von `/trinkjournal/`. Lokale Daten einer anderen Website-Adresse werden nicht automatisch übernommen: dort CSV exportieren und hier importieren. Personenbezogene Trinkeinträge sind kein Bestandteil des Quellcodes.
+
+`npx playwright test --config playwright.pages.config.js` prüft Start, Speicherung, Statistiken und Offline-Betrieb mit diesem Unterordner.
+
 Installierbare, deutschsprachige Progressive Web App ohne externe Abhängigkeiten. Alle Getränke und Einträge bleiben im lokalen Browserspeicher. Offline nach erstem erfolgreichen Laden und Aktivieren des Service Workers nutzbar. Keine Synchronisation zwischen Browsern oder Geräten. Browserdaten nicht löschen, ohne vorher CSV zu exportieren.
 
 ## Nutzung

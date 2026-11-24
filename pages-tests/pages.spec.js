@@ -1,0 +1,8 @@
+import {test,expect} from '@playwright/test';
+test('GitHub-Pages-Unterordner: Start, Manifest, Speichern, Statistiken und Offline-Modus',async({page,context,request})=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));const response=await request.get('/trinkjournal');expect(response.url()).toContain('/trinkjournal/');await page.goto('./');await expect(page.locator('.drink-card').first()).toBeVisible();
+ const manifest=await(await request.get('./manifest.webmanifest')).json();expect(new URL(manifest.start_url,page.url()).pathname).toBe('/trinkjournal/');expect(new URL(manifest.scope,page.url()).pathname).toBe('/trinkjournal/');
+ await page.getByRole('button',{name:'Wasser erfassen, Standard 0,3 Liter',exact:true}).click();await page.locator('#entry-form button[type="submit"]').click();await expect(page.locator('#total')).toHaveText('0,3');
+ await page.locator('#app-menu>summary').click();await page.locator('#stats-open').click();await expect(page.locator('#stats-dialog')).toBeVisible();await expect(page.locator('#stats-total')).toHaveText('0,3 l');await page.getByRole('button',{name:'Statistiken schließen',exact:true}).click();
+ await page.evaluate(async()=>{const r=await navigator.serviceWorker.ready;if(new URL(r.scope).pathname!=='/trinkjournal/')throw Error('Falscher Offline-Geltungsbereich');if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}))});await context.setOffline(true);await page.reload();await expect(page.locator('#total')).toHaveText('0,3');await page.locator('#app-menu>summary').click();await page.locator('#stats-open').click();await expect(page.locator('#stats-dialog')).toBeVisible();expect(errors).toEqual([]);
+});
